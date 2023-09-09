@@ -5,15 +5,19 @@
     app:singleLineTitle="true"
     app:title="Launcher Settings">
     <Preference
-        android:title="@string/android_settings_title"
-        android:key="@string/android_settings"
+        android:title="@string/hide_apps"
+        android:key="@string/hide_apps"
         android:icon="@drawable/settings"
-        android:summary="@string/android_settings_summary" />
+        android:summary="@string/hide_apps_summary" />
+    <SwitchPreference android:title="@string/show_sideload"
+        android:key="@string/show_sideload"
+        android:icon="@drawable/settings"
+        />
     <ListPreference
+        android:defaultValue="Default"
         android:entries="@array/background_entries"
         android:entryValues="@array/background_values"
         android:key="@string/pref_background"
-        android:persistent="false"
         android:icon="@drawable/wallpaper"
         android:title="@string/background_title"
         />

@@ -1,6 +1,7 @@
 package com.hugegreenbug.launchy
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
@@ -17,10 +18,9 @@ import android.os.Looper
 import android.widget.*
 import androidx.fragment.app.FragmentTransaction
 import android.content.SharedPreferences
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.TransitionDrawable
-import android.view.View
+import android.provider.Settings
+import android.util.Log
+import androidx.preference.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.res.ResourcesCompat
 
@@ -29,20 +29,30 @@ class MainActivity : AppCompatActivity() {
     private lateinit var titleText: TextView
     private lateinit var titleClock: TextClock
     private lateinit var settingsButton: ImageView
+    private lateinit var androidSettingsButton: ImageView
     private lateinit var appManager: AppManager
     private lateinit var favoriteDb: FavoriteDatabase
     private lateinit var adapter: FavoriteAdapter
     private val appDataLock = ReentrantLock()
     private val appData: ArrayList<App> = ArrayList()
-    private val colCount = 4
-    @Volatile
+    private val colCount = 5
+    private lateinit var sh:SharedPreferences
+        @Volatile
     private var allApps: Boolean = false
 
     private val getResult =
         registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) {
-            focusAppsLongDelay()
+                result ->
+            run {
+                if (result.resultCode == Activity.RESULT_OK) {
+                    // There are no request codes
+                    val data: Intent? = result.data
+                    Log.d("TAG", "data: $data ")
+                }
+                focusAppsLongDelay()
+            }
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,13 +60,15 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         titleText = findViewById(R.id.title)
         titleClock = findViewById(R.id.textClock)
-        settingsButton = findViewById(R.id.androidSettings)
+        settingsButton = findViewById(R.id.launcherSettings)
+        androidSettingsButton = findViewById(R.id.androidSettings)
         settingsButton.visibility = INVISIBLE
+        sh = getSharedPreferences(launchPrefs, MODE_PRIVATE)
         appManager = AppManager(applicationContext)
         favoriteDb = FavoriteDatabase.getAppDatabase(this)!!
-        initAppList()
         initAndroidSettingsButton()
-        val sh = getSharedPreferences(launchPrefs, MODE_PRIVATE)
+        initAppList()
+
         val runOnboard = sh.getBoolean(showOnboard, true)
         if (runOnboard) {
             val intent = Intent(this, OnboardingActivity::class.java)
@@ -115,8 +127,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initAndroidSettingsButton() {
+        androidSettingsButton.setOnClickListener {
+            val intent = Intent(Settings.ACTION_SETTINGS)
+            startActivity(intent)
+        }
         settingsButton.setOnClickListener {
-           startSettings()
+            val loadApps:Boolean = sh.getBoolean( loadApps, false)
+            if(loadApps){
+                sh.edit().putBoolean(Companion.loadApps,false).apply()
+                updateApps(false)
+            }else {
+                startSettings()
+            }
         }
         settingsButton.setOnKeyListener { _, code, event ->
             if (event.action != KeyEvent.ACTION_DOWN) {
@@ -154,7 +176,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initAppList() {
-        adapter = FavoriteAdapter(appManager, appData)
+        adapter = FavoriteAdapter(applicationContext,appManager, appData)
         adapter.itemLongClickListener = { app, itemView -> addRemoveFavorites(app, itemView) }
         adapter.setHasStableIds(true)
         appList = findViewById(R.id.appList)
@@ -163,14 +185,29 @@ class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    private fun updateApps(all: Boolean) {
+    fun updateApps(hideAppsVar: Boolean) {
         thread {
+            var editIcon = R.drawable.ic_edit
+            val loadApps:Boolean = sh.getBoolean( loadApps, false)
+            if(loadApps) {
+                editIcon = R.drawable.ic_check
+            }
+            settingsButton.setImageDrawable(
+                ResourcesCompat.getDrawable(
+                    resources,
+                    editIcon,
+                    null
+                )
+            )
+            val hideApps = if (loadApps ) true else hideAppsVar
             appDataLock.lock()
             var favs = favoriteDb.favorites().getAllFavorites()
-            val allAppsList = appManager.getLaunchableApps()
+
+            val allAppsList = appManager.getLaunchableApps(sh.getBoolean(showSideload, false))
             val newAppList: ArrayList<App> = ArrayList()
 
-            if (favs.isEmpty() && !all) {
+
+            if (favs.isEmpty() && !hideApps) {
                 for (a in allAppsList) {
                     if (a.packageName == packageName) {
                         continue
@@ -212,21 +249,21 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                if (all && a.packageName != packageName) {
+                if (hideApps && a.packageName != packageName) {
                     newAppList.add(a)
-                } else if (!all && a.favorite) {
+                } else if (!hideApps && a.favorite) {
                     a.favorite = false
                     newAppList.add(a)
                 }
             }
 
-            newAppList.sortBy { app -> app.label }
-            if (all == allApps && appData.isEqual(newAppList)) {
+            newAppList.sortWith(compareBy( { app -> app.sideLoad},{ app -> app.label }))
+            if (hideApps == allApps && appData.isEqual(newAppList)) {
                 appDataLock.unlock()
                 return@thread
             }
 
-            allApps = all
+            allApps = hideApps
 
             runOnUiThread {
                 if (allApps) {
@@ -333,17 +370,12 @@ class MainActivity : AppCompatActivity() {
         if (fragment != null && fragment.isAdded) {
             removeFrag()
         } else {
-            if (allApps) {
-                updateApps(false)
-            } else {
-                updateApps(true)
-            }
+            updateApps(false)
         }
     }
 
     override fun onResume() {
         super.onResume()
-        //removeFrag()
         updateApps(allApps)
     }
 
@@ -358,5 +390,7 @@ class MainActivity : AppCompatActivity() {
         const val launchPrefs:String="LAUNCHY"
         const val showOnboard:String="onboard"
         const val backgroundDim:String="dim"
+        var loadApps:String="loadApps"
+        var showSideload:String="showSideload"
     }
 }

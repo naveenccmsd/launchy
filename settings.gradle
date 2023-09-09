@@ -6,5 +6,5 @@ dependencyResolutionManagement {
         maven { url  'https://jitpack.io' }
     }
 }
-rootProject.name = "Launchy"
+rootProject.name = "xLaunch"
 include ':app'

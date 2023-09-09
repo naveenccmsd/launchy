@@ -51,14 +51,19 @@ class BitmapUtils {
 
         @SuppressLint("ResourceType")
         fun setWallpaper(drawable:Drawable, activity: Activity) {
+            val bitmap = toBitmap(drawable)
+            setWallpaper(activity, bitmap)
+        }
+
+        fun setWallpaper(activity: Activity, bitmap: Bitmap) {
             thread {
                 val wallpaperManager = WallpaperManager.getInstance(activity.applicationContext)
                 try {
-                    val displayMetrics: DisplayMetrics = activity.applicationContext.resources.displayMetrics
+                    val displayMetrics: DisplayMetrics =
+                        activity.applicationContext.resources.displayMetrics
                     val wallWidth = displayMetrics.widthPixels
                     val wallHeight = displayMetrics.heightPixels
                     wallpaperManager.suggestDesiredDimensions(wallWidth, wallHeight)
-                    val bitmap = toBitmap(drawable)
                     val newBmap = returnBitmap(displayMetrics, bitmap, wallWidth, wallHeight)
                     if (newBmap != null) {
                         wallpaperManager.setBitmap(newBmap)
@@ -69,6 +74,7 @@ class BitmapUtils {
                 }
             }
         }
+
         private fun Int.nonZero() = if (this <= 0) 1 else this
     }
 }

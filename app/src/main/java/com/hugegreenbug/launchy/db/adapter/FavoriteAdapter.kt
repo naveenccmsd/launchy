@@ -1,5 +1,8 @@
 package com.hugegreenbug.launchy.db.adapter
+import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.graphics.*
+import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -10,9 +13,16 @@ import com.hugegreenbug.launchy.App
 import com.hugegreenbug.launchy.AppManager
 import com.hugegreenbug.launchy.R
 import android.widget.RelativeLayout
+import androidx.appcompat.app.AppCompatActivity
 import com.hugegreenbug.launchy.BitmapUtils
+import com.hugegreenbug.launchy.MainActivity
+import com.hugegreenbug.launchy.MainActivity.Companion.launchPrefs
 
-class FavoriteAdapter(private val appManager: AppManager, private var list: List<App>) :
+class FavoriteAdapter(
+    private val applicationContext: Context,
+    private val appManager: AppManager,
+    private var list: List<App>
+) :
     RecyclerView.Adapter<FavoriteAdapter.ViewHolder>()  {
     var itemLongClickListener: (App, RelativeLayout) -> Boolean = { _, _ -> false }
     var itemKeyListener: (Int, KeyEvent, App, RelativeLayout, Int, Int) -> Boolean = { _, _, _, _, _, _ -> false }
@@ -40,16 +50,25 @@ class FavoriteAdapter(private val appManager: AppManager, private var list: List
             itemView.setOnKeyListener { _, code, event -> itemKeyListener.invoke(code, event, app,
                 ivContainer, size, position) }
             itemView.setOnClickListener {
-                appManager.startApp(app)
+                val sh = applicationContext.getSharedPreferences(launchPrefs, MODE_PRIVATE)
+                Log.d("TAG", "ccmsd:loadApps "+sh.getBoolean(MainActivity.loadApps,false))
+                if(sh.getBoolean(MainActivity.loadApps,false)) {
+                    itemLongClickListener.invoke(app, ivFav)
+                }else{
+                    appManager.startApp(app)
+                }
                 return@setOnClickListener
             }
 
-            val banner = appManager.getAppIcon(app.componentInfo)
-            if (banner != null) {
-                val bannerBmap = BitmapUtils.toBitmap(banner)
-                val roundedBanner = getRoundedCornerBitmap(bannerBmap)
-                ivIcon.setImageBitmap(roundedBanner)
+            val banner = appManager.getAppIcon(app.packageItemInfo)
+            val bannerBmap = BitmapUtils.toBitmap(banner)
+            val roundedBanner = getRoundedCornerBitmap(bannerBmap)
+            ivIcon.setImageBitmap(roundedBanner)
+            if(app.sideLoad){
+                ivIcon.scaleType = ImageView.ScaleType.CENTER_INSIDE;
+                ivIcon.setBackgroundColor(Color.parseColor("#FFFFFF"))
             }
+
             if (app.favorite) {
                 ivFav.visibility = View.VISIBLE
             } else {

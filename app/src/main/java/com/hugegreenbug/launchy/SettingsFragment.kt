@@ -1,23 +1,28 @@
 package com.hugegreenbug.launchy
 
 import android.content.Context.MODE_PRIVATE
-import android.os.Bundle
 import android.content.Intent
-import android.graphics.*
-import android.view.View.*
+import android.content.SharedPreferences
+import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.*
-import androidx.leanback.preference.LeanbackPreferenceFragmentCompat
-import android.provider.Settings
-import androidx.leanback.preference.LeanbackSettingsFragmentCompat
-import androidx.preference.*
-import android.content.SharedPreferences
 import androidx.core.content.res.ResourcesCompat
+import androidx.fragment.app.Fragment
+import androidx.leanback.preference.LeanbackPreferenceFragmentCompat
+import androidx.leanback.preference.LeanbackSettingsFragmentCompat
+import androidx.preference.ListPreference
+import androidx.preference.Preference
+import androidx.preference.PreferenceDialogFragmentCompat
+import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceScreen
+import com.codekidlabs.storagechooser.StorageChooser
+import java.io.File
+
 
 class SettingsFragment : LeanbackSettingsFragmentCompat() {
     override fun onCreateView(
@@ -83,14 +88,35 @@ class LauncherFragment : LeanbackPreferenceFragmentCompat() {
         // Load the preferences from an XML resource
         setPreferencesFromResource(R.xml.root_preferences, rootKey)
 
-        val androidSettings: Preference? = findPreference(getString(R.string.android_settings)) as Preference?
-        androidSettings?.setOnPreferenceClickListener {
+        val hideApps: Preference? = findPreference(getString(R.string.hide_apps)) as Preference?
+        hideApps?.setOnPreferenceClickListener {
             activity?.onBackPressed()
-            val intent = Intent(Settings.ACTION_SETTINGS)
-            startActivity(intent)
+            context?.getSharedPreferences(MainActivity.launchPrefs, MODE_PRIVATE)?.edit()
+                ?.putBoolean(MainActivity.loadApps,true)?.apply()
+                val intent = Intent(requireActivity(), MainActivity::class.java)
+                startActivity(intent)
             return@setOnPreferenceClickListener true
         }
+        val showSideload: Preference? = findPreference(getString(R.string.show_sideload)) as Preference?
+        if (showSideload != null) {
+            showSideload.onPreferenceChangeListener = Preference.OnPreferenceChangeListener  { _, newValue ->
+                activity?.onBackPressed()
+                val sh = context?.getSharedPreferences(MainActivity.launchPrefs, MODE_PRIVATE)
+                val prefEditor: SharedPreferences.Editor? = sh?.edit()
+                prefEditor?.putBoolean(MainActivity.loadApps, newValue as Boolean)
+                prefEditor?.putBoolean(MainActivity.showSideload, newValue as Boolean)
+                prefEditor?.apply()
 
+                val intent = Intent(requireActivity(), MainActivity::class.java)
+                startActivity(intent)
+                true
+            }
+        }
+        val chooser = StorageChooser.Builder()
+            .withActivity(this.activity)
+            .withFragmentManager(this.activity?.fragmentManager  )
+            .withMemoryBar(true)
+            .build()
         val listPreference: ListPreference? =
             findPreference(getString(R.string.pref_background)) as ListPreference?
         if (listPreference != null) {
@@ -98,6 +124,27 @@ class LauncherFragment : LeanbackPreferenceFragmentCompat() {
                 Preference.OnPreferenceChangeListener { _, newValue ->
                     var wall: Drawable? = null
                     when (newValue) {
+                        "Default" -> {
+                            wall = ResourcesCompat.getDrawable(resources, R.drawable.blackbg, null)
+                        }
+                        "Local" -> {
+                            chooser.show()
+                            // get path that the user has chosen
+                            chooser.setOnSelectListener { path ->
+                                val imgFile = File(path)
+                                if(imgFile.exists()){
+                                    val myBitmap = BitmapFactory.decodeFile(imgFile.absolutePath)
+                                    this.activity?.let { BitmapUtils.setWallpaper(it,myBitmap) }
+                                    true
+                                }
+                            }
+                        }
+                        "RainbowPainting" -> {
+                            wall = ResourcesCompat.getDrawable(resources, R.drawable.rainbow, null)
+                        }
+                        "kidsRainbow" -> {
+                            wall = ResourcesCompat.getDrawable(resources, R.drawable.kids_rainbow, null)
+                        }
                         "Black" -> {
                             wall = ResourcesCompat.getDrawable(resources, R.drawable.blackbg, null)
                         }
@@ -128,7 +175,7 @@ class LauncherFragment : LeanbackPreferenceFragmentCompat() {
                     }
 
                     if (wall != null) {
-                        this.activity?.let { BitmapUtils.setWallpaper(wall, it) }
+                        this.activity?.let { BitmapUtils.setWallpaper(wall!!, it) }
                     }
 
                     true
@@ -196,6 +243,7 @@ class LauncherFragment : LeanbackPreferenceFragmentCompat() {
             startActivity(intent)
         }, 1200)
     }
+
 
     override fun onPreferenceTreeClick(preference: Preference?): Boolean {
         return super.onPreferenceTreeClick(preference)

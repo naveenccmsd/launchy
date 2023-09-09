@@ -30,30 +30,48 @@
                 android:id="@+id/title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerInParent="true"
+                android:layout_toStartOf="@+id/launcherSettings"
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"
                 android:textSize="30sp"
-                android:theme="@style/Title"
-                android:layout_alignParentStart="true"
-                android:layout_centerInParent="true"
-                android:layout_toStartOf="@+id/androidSettings" />
+                android:theme="@style/Title" />
 
             <ImageView
-                android:id="@+id/androidSettings"
+                android:id="@+id/launcherSettings"
                 android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_marginEnd="12dp"
+                android:layout_height="40dp"
                 android:layout_centerInParent="true"
-                android:layout_toStartOf="@id/textClock"
-                android:theme="@style/SettingsButton"
+                android:layout_marginEnd="15dp"
+                android:layout_toStartOf="@id/androidSettings"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:contentDescription="@string/settings"
                 android:focusable="true"
                 android:focusedByDefault="false"
+                android:src="@drawable/ic_edit"
+                android:theme="@style/SettingsButton"
                 android:visibility="invisible"
-                android:src="@drawable/settings"
                 tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck,ImageContrastCheck" />
+
+            <ImageView
+                android:id="@+id/androidSettings"
+                android:layout_width="32dp"
+                android:layout_height="40dp"
+                android:layout_centerHorizontal="true"
+                android:layout_marginEnd="15dp"
+                android:layout_toStartOf="@id/textClock"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:contentDescription="@string/settings"
+                android:focusable="true"
+                android:focusedByDefault="false"
+                android:src="@drawable/settings"
+                android:theme="@style/SettingsButton"
+                android:visibility="visible"
+                tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck,ImageContrastCheck"
+                tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
             <TextClock
                 android:id="@+id/textClock"
@@ -65,6 +83,7 @@
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"
                 android:textSize="30sp" />
+
         </RelativeLayout>
     </LinearLayout>
     <androidx.recyclerview.widget.RecyclerView
@@ -87,11 +106,13 @@
         android:scrollbars="vertical"
         android:scrollbarSize="3dp">
     </androidx.recyclerview.widget.RecyclerView>
+
     <RelativeLayout
         android:id="@+id/settings"
         android:layout_width="400dp"
         android:layout_height="match_parent"
         android:layout_alignParentEnd="true"
+        android:layout_marginEnd="-3dp"
         android:focusedByDefault="false"
-        tools:ignore="SpeakableTextPresentCheck"/>
+        tools:ignore="SpeakableTextPresentCheck" />
 </RelativeLayout>

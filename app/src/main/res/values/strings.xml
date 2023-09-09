@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">Launchy Launcher</string>
-    <string name="all_apps">Applications</string>
-    <string name="favorites">Favorites</string>
+    <string name="app_name">Launchy New</string>
+    <string name="all_apps">Hide Applications</string>
+    <string name="favorites">Applications</string>
     <string name="pref_background">background</string>
     <string name="pref_nature">nature</string>
     <string name="pref_dim_background">background_dim</string>
@@ -13,6 +13,9 @@
     <string name="previous">Previous</string>
     <string name="settings">Settings</string>
     <string name="android_settings">android_settings</string>
+    <string name="show_sideload">Show Sideload Apps</string>
+    <string name="hide_apps">Hide Apps</string>
+    <string name="hide_apps_summary">Long Press to Hide Apps</string>
     <string name="android_settings_title">Android Settings</string>
     <string name="android_settings_summary">Starts Android Settings</string>
     <string name="alert">Alert</string>

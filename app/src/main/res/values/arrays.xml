@@ -1,8 +1,12 @@
 <resources>
     <!-- Background Preference -->
     <string-array name="background_entries">
+        <item>Default</item>
+        <item>Local</item>
         <item>Black</item>
         <item>Dark Grey</item>
+        <item>Rainbow Painting</item>
+        <item>Kids Rainbow</item>
         <item>Unsplash Nature</item>
         <item>Unsplash Animals</item>
         <item>Unsplash Textures</item>
@@ -12,8 +16,12 @@
     </string-array>
 
     <string-array name="background_values">
+        <item>Default</item>
+        <item>Local</item>
         <item>Black</item>
         <item>DarkGrey</item>
+        <item>RainbowPainting</item>
+        <item>kidsRainbow</item>
         <item>UnsplashNature</item>
         <item>UnsplashAnimals</item>
         <item>UnsplashTextures</item>
